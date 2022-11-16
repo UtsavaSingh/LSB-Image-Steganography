@@ -1,3 +1,20 @@
+/*
+ * Name            : Utsava Kumar Singh
+ * Date            : 10-11-2022
+ * Description     : Code to encode secret file data to source image file by creating new image file with option '-e' and decode data 
+                     from new image file to new text file with option '-d'
+ * Input:	For option 'e'
+		a) Source image file name (.bmp)
+		b) Secret text file name (.c / .sh / .txt)
+		c) Output image file name (.bmp) (optional)
+		Example - ./lsb_steg -e <.bmp file> <.txt/.c/.sh file> [Output file]
+		For option 'd'
+		a) Stego image file name (.bmp)
+		b) Output text file name (.c / .sh / .txt) (optional)
+		Example - ./lsb_steg -d <.bmp file> [output file]
+ * Output:	Data in secret file copied to Output text file
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include "encode.h"

@@ -4,7 +4,7 @@
 #include "types.h"
 #include "common.h"
 
-/* Function Definitions */
+/* Function Definitions for Encoding */
 
 /* Read and validate command line argument
  * Input: Command line Argument count and Arguments wtih File name info
@@ -13,6 +13,7 @@
  */
 Status read_and_validate_encode_args(int argc, char *argv[], EncodeInfo *encInfo)
 {
+    // Checking argument count
     if(argc == 4 || argc == 5)
     {
         if(strcmp(strstr(argv[2], "."), ".bmp") == 0)
@@ -69,6 +70,7 @@ Status read_and_validate_encode_args(int argc, char *argv[], EncodeInfo *encInfo
  */
 Status do_encoding(EncodeInfo *encInfo)
 {
+    // Open files needed for encoding
     if(open_encode_files(encInfo) == e_success)
     {
         printf("INFO : Done\n");
@@ -80,6 +82,7 @@ Status do_encoding(EncodeInfo *encInfo)
     }
 
     printf("INFO : ## Encoding procedure started ##\n");
+    // Check capacity of .bmp image to encode secret text
     if(check_capacity(encInfo) == e_success)
     {
         printf("INFO : Done. Found OK\n");
@@ -89,6 +92,8 @@ Status do_encoding(EncodeInfo *encInfo)
         printf("ERROR : Check capacity function failure\n");
         return e_failure;
     }
+    
+    // Copy header of source file to stego file
     if(copy_bmp_header(encInfo -> fptr_src_image, encInfo -> fptr_stego_image) == e_success)
     {
         printf("INFO : Done\n");
@@ -98,6 +103,7 @@ Status do_encoding(EncodeInfo *encInfo)
         printf("ERROR : Copying image header failure\n");
     }
 
+    // Encode magic string to stego image file
     if(encode_magic_string(MAGIC_STRING, encInfo) == e_success)
     {
         printf("INFO : Done\n");
@@ -108,6 +114,7 @@ Status do_encoding(EncodeInfo *encInfo)
         return e_failure;
     }
 
+    // Encode secret file extension size to stego image file
     if(encode_secret_file_extn_size(strlen(encInfo -> extn_secret_file), encInfo -> fptr_src_image, encInfo -> fptr_stego_image) == e_success)
     {
         printf("INFO : Done\n");
@@ -118,6 +125,7 @@ Status do_encoding(EncodeInfo *encInfo)
         return e_failure;
     }
 
+    // Encode secret file extension to stego image file
     if(encode_secret_file_extn(encInfo -> extn_secret_file, encInfo) == e_success)
     {
         printf("INFO : Done\n");
@@ -128,6 +136,7 @@ Status do_encoding(EncodeInfo *encInfo)
         return e_failure;
     }
 
+    // Encode secret file size to stego image file
     if(encode_secret_file_size(encInfo -> size_secret_file, encInfo) == e_success)
     {
         printf("INFO : Done\n");
@@ -138,6 +147,7 @@ Status do_encoding(EncodeInfo *encInfo)
         return e_failure;
     }
 
+    // Encode secret file data to stego image file
     if(encode_secret_file_data(encInfo) == e_success)
     {
         printf("INFO : Done\n");
@@ -148,6 +158,7 @@ Status do_encoding(EncodeInfo *encInfo)
         return e_failure;
     }
 
+    // Copy remaining source image data to stego image file
     if(copy_remaining_img_data(encInfo -> fptr_src_image, encInfo -> fptr_stego_image) == e_success)
     {
         printf("INFO : Done\n");
@@ -162,8 +173,7 @@ Status do_encoding(EncodeInfo *encInfo)
 
 /*
  * Get File pointers for i/p and o/p files
- * Inputs: Src Image file, Secret file and
- * Stego Image file
+ * Inputs: Src Image file, Secret file and Stego Image file
  * Output: FILE pointer for above files
  * Return Value: e_success or e_failure, on file errors
  */
@@ -186,7 +196,8 @@ Status open_encode_files(EncodeInfo *encInfo)
     }
 
     // Secret file
-    encInfo->fptr_secret = fopen(encInfo->secret_fname, "r");
+    encInfo->fptr_secret = fopen(encInfo->secret_fname,"r");
+    
     // Do Error handling
     if (encInfo->fptr_secret == NULL)
     {
@@ -259,9 +270,11 @@ uint get_file_size(FILE *fptr)
 Status check_capacity(EncodeInfo *encInfo)
 {
     printf("INFO : Checking for %s capacity to handle %s\n", encInfo -> src_image_fname, encInfo -> secret_fname);
+    
     encInfo -> image_capacity = get_image_size_for_bmp(encInfo -> fptr_src_image);
     encInfo -> size_secret_file = get_file_size(encInfo -> fptr_secret);
     strcpy(encInfo -> extn_secret_file, strstr(encInfo -> secret_fname, "."));
+    
     if(encInfo -> image_capacity > ((strlen(MAGIC_STRING) + sizeof(int) + strlen(encInfo -> extn_secret_file) + sizeof(int) + encInfo -> size_secret_file) * 8))
     {
         return e_success;
@@ -305,7 +318,7 @@ Status encode_data_to_image(char *data, int size, FILE *fptr_src_image, FILE *fp
 
 /* Encode Magic string in stego image
  * Input: magic string and FILEs info
- * Output: Encode magic string '#*' in stego image
+ * Output: Encode magic string in stego image
  * Return: e_success or e_failure
  */
 Status encode_magic_string(char *magic_string, EncodeInfo *encInfo)

@@ -4,7 +4,7 @@
 #include "types.h"
 #include "common.h"
 
-/* Function Definitions */
+/* Function Definitions for Decoding */
 
 /* Read and validate command line argument
  * Input: Command line Argument count and Arguments wtih File name info
@@ -60,6 +60,7 @@ Status read_and_validate_decode_args(int argc, char *argv[], DecodeInfo *decInfo
 Status do_decoding(DecodeInfo *decInfo)
 {
 
+    // Open files needed for decoding
     if(open_decode_files(decInfo) == e_success)
     {
         printf("INFO : Done\n");
@@ -71,6 +72,7 @@ Status do_decoding(DecodeInfo *decInfo)
     }
 
     printf("INFO : ## Decoding Procedure Started ##\n");
+    // Decode magic string from stego image
     if(decode_magic_string(MAGIC_STRING, decInfo) == e_success)
     {
         printf("INFO : Done\n");
@@ -81,9 +83,10 @@ Status do_decoding(DecodeInfo *decInfo)
         return e_failure;
     }
 
+    // Decode secret file extension size from stego image
     if(decode_secret_file_extn_size(decInfo -> fptr_stego_image, decInfo) == e_success)
     {
-        printf("INFO : Done\n");
+        printf("INFO : Done, it's %d bytes\n", decInfo->size_decode_file_extn);
     }
     else
     {
@@ -91,9 +94,10 @@ Status do_decoding(DecodeInfo *decInfo)
         return e_failure;
     }
 
+    // Decode secret file extension from stego image
     if(decode_secret_file_extn(decInfo) == e_success)
     {
-        printf("INFO : Done\n");
+        printf("INFO : Done, it's %s file\n", decInfo->extn_decode_file);
         // Check for output file provided or not
         if (decInfo->decode_fname == NULL)
         {
@@ -150,9 +154,10 @@ Status do_decoding(DecodeInfo *decInfo)
         return e_failure;
     }
 
+    // Decode secret file size from stego image
     if(decode_secret_file_size(decInfo) == e_success)
     {
-        printf("INFO : Done\n");
+        printf("INFO : Done, it's %d bytes\n", decInfo->size_decode_file);
     }
     else
     {
@@ -160,6 +165,7 @@ Status do_decoding(DecodeInfo *decInfo)
         return e_failure;
     }
 
+    // Decode secret file data from stego image
     if(decode_secret_file_data(decInfo) == e_success)
     {
         printf("INFO : Done\n");
@@ -174,7 +180,7 @@ Status do_decoding(DecodeInfo *decInfo)
 
 /*
  * Get File pointers for i/p and o/p files
- * Inputs: Stego Image file, Decode file
+ * Inputs: Stego Image file
  * Output: FILE pointer for above files
  * Return Value: e_success or e_failure
  */
@@ -201,7 +207,7 @@ Status open_decode_files(DecodeInfo *decInfo)
 
 /*
  * Get File pointers for i/p and o/p files
- * Inputs: Stego Image file, Decode file
+ * Inputs: Decode file
  * Output: FILE pointer for above files
  * Return Value: e_success or e_failure
  */
@@ -221,7 +227,7 @@ Status open_output_file(DecodeInfo *decInfo)
 }
 
 /* Decode secret data from image data
- * Input: Secret data, secret data size, File pointer of source and stego image files
+ * Input: secret data size, file pointer of stego image file, decode info 
  * Output: Gets source image data and decodes it with secret data by calling another function
  * Return: e_success or e_failure
  */
@@ -237,7 +243,7 @@ Status decode_data_from_image(int size, FILE *fptr_stego_image, DecodeInfo *decI
 
 /* Decode Magic string from stego image
  * Input: magic string and FILEs info
- * Output: Decode magic string '#*' from stego image
+ * Output: Decode magic string from stego image
  * Return: e_success or e_failure
  */
 
@@ -246,7 +252,7 @@ Status decode_magic_string(char *magic_string, DecodeInfo *decInfo)
     printf("INFO : Decoding magic string signature\n");
     fseek(decInfo -> fptr_stego_image, 54, SEEK_SET);
     decode_data_from_image(strlen(magic_string), decInfo -> fptr_stego_image, decInfo);
-    if(strcmp(magic_string, decInfo -> decode_data) == 0)
+    if(strncmp(magic_string, decInfo -> decode_data, strlen(magic_string)) == 0)
     {
         printf("INFO : Decoded and matched\n");
         return e_success;
@@ -274,8 +280,8 @@ Status decode_secret_file_extn_size(FILE *fptr_stego_image, DecodeInfo *decInfo)
 }
 
 /* Decodes secret size data from image 8 byte data
- * Input: Secret 1 byte data and Image 8 byte data
- * Output: Decode data to image_buffer
+ * Input: Image 32 byte data
+ * Output: Decoded size
  * Return: decoded size from lsb
  */
 
@@ -338,9 +344,9 @@ Status decode_secret_file_data(DecodeInfo *decInfo)
 }
 
 /* Decodes secret byte data from image 8 byte data
- * Input: Secret 1 byte data and Image 8 byte data
- * Output: Decode data to image_buffer
- * Return: e_success or e_failure
+ * Input: Image 8 byte data
+ * Output: Decode data 
+ * Return: decoded byte
  */
 char decode_byte_from_lsb(char *image_buffer)
 {
