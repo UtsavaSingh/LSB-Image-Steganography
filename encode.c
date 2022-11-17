@@ -258,8 +258,11 @@ uint get_image_size_for_bmp(FILE *fptr_image)
  */
 uint get_file_size(FILE *fptr)
 {
+    uint file_size;
     fseek(fptr, 0, SEEK_END);
-    return ftell(fptr);
+    file_size = ftell(fptr);
+    rewind(fptr);
+    return file_size;
 }
 
 /* To check the capacity of source image to handle secret data
@@ -416,7 +419,6 @@ Status encode_secret_file_data(EncodeInfo *encInfo)
 {
     printf("INFO : Encoding secret file data\n");
     char secret_buff[encInfo->size_secret_file];
-    encInfo->fptr_secret = fopen(encInfo->secret_fname,"r");
     fgets(secret_buff, encInfo->size_secret_file, encInfo->fptr_secret);
     encode_data_to_image(secret_buff,strlen(secret_buff), encInfo -> fptr_src_image, encInfo -> fptr_stego_image, encInfo);
     return e_success;
